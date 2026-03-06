@@ -1,0 +1,1365 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MER — ERP Iglesias</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
+
+      :root {
+        --bg: #080c14;
+        --grid: rgba(255, 255, 255, 0.025);
+        --surface: #0f1520;
+        --surface2: #141c2e;
+        --border: #1e2d47;
+        --border2: #253555;
+        --text: #e2e8f0;
+        --muted: #64748b;
+        --dim: #334155;
+
+        --c-user: #3b82f6;
+        --c-church: #10b981;
+        --c-person: #f59e0b;
+        --c-course: #8b5cf6;
+        --c-enroll: #ef4444;
+        --c-offer: #eab308;
+        --c-pay: #06b6d4;
+
+        --pk: #fbbf24;
+        --fk: #60a5fa;
+        --uk: #34d399;
+        --weak: #f87171;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+        font-family: "Inter", sans-serif;
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Background grid */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .page {
+        position: relative;
+        z-index: 1;
+        padding: 48px 32px 64px;
+        max-width: 1500px;
+        margin: 0 auto;
+      }
+
+      /* ── HEADER ── */
+      header {
+        text-align: center;
+        margin-bottom: 48px;
+      }
+
+      .header-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        border-radius: 100px;
+        padding: 6px 18px;
+        font-size: 0.75rem;
+        font-family: "JetBrains Mono", monospace;
+        color: var(--c-user);
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      header h1 {
+        font-size: 2.4rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -1.5px;
+        margin-bottom: 10px;
+      }
+
+      header p {
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* ── LEGEND ── */
+      .legend {
+        display: flex;
+        gap: 24px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 48px;
+      }
+
+      .leg {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+        font-family: "JetBrains Mono", monospace;
+        color: var(--muted);
+      }
+
+      .leg-key {
+        width: 28px;
+        height: 18px;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+        font-weight: 700;
+      }
+
+      /* ── DIAGRAM CANVAS ── */
+      .canvas-wrap {
+        position: relative;
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .canvas {
+        position: relative;
+        width: 1380px;
+        height: 920px;
+        margin: 0 auto;
+      }
+
+      /* SVG lines layer */
+      .lines-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      /* ── ENTITY CARD ── */
+      .entity {
+        position: absolute;
+        width: 220px;
+        background: var(--surface);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        z-index: 2;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        transition:
+          box-shadow 0.2s,
+          transform 0.2s;
+      }
+
+      .entity:hover {
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+        transform: translateY(-2px);
+        z-index: 10;
+      }
+
+      .entity-head {
+        padding: 12px 14px 10px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .entity-title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .entity-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .entity-name {
+        font-weight: 700;
+        font-size: 0.92rem;
+        letter-spacing: -0.3px;
+      }
+
+      .entity-table-name {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.65rem;
+        color: var(--muted);
+        margin-left: 18px;
+      }
+
+      /* fields */
+      .field {
+        display: grid;
+        grid-template-columns: 30px 1fr auto;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-bottom: 1px solid rgba(30, 45, 71, 0.5);
+      }
+
+      .field:last-child {
+        border-bottom: none;
+      }
+
+      .field-badge {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.58rem;
+        font-weight: 700;
+        border-radius: 3px;
+        padding: 1px 3px;
+        text-align: center;
+        letter-spacing: 0.3px;
+      }
+
+      .b-pk {
+        background: rgba(251, 191, 36, 0.15);
+        color: var(--pk);
+      }
+      .b-fk {
+        background: rgba(96, 165, 250, 0.15);
+        color: var(--fk);
+      }
+      .b-uk {
+        background: rgba(52, 211, 153, 0.15);
+        color: var(--uk);
+      }
+      .b-wk {
+        background: rgba(248, 113, 113, 0.15);
+        color: var(--weak);
+      }
+
+      .field-name {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.72rem;
+        color: var(--text);
+      }
+
+      .field-type {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.6rem;
+        color: var(--muted);
+        text-align: right;
+      }
+
+      /* ── POSITIONS ── */
+      /* Layout:
+       Church         (center-top)
+      /      \
+   Person    Course
+    /  \       \
+  Offer Enrollment
+          \
+         Payment
+    AppUser (bottom-right standalone)
+  */
+
+      #e-church {
+        left: 580px;
+        top: 30px;
+      }
+      #e-person {
+        left: 200px;
+        top: 230px;
+      }
+      #e-course {
+        left: 940px;
+        top: 230px;
+      }
+      #e-enroll {
+        left: 580px;
+        top: 460px;
+      }
+      #e-offer {
+        left: 170px;
+        top: 520px;
+      }
+      #e-pay {
+        left: 580px;
+        top: 700px;
+      }
+      #e-user {
+        left: 1080px;
+        top: 680px;
+      }
+
+      /* ── CARDINALITY LABELS on lines ── */
+      .card-label {
+        position: absolute;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.65rem;
+        font-weight: 700;
+        background: var(--bg);
+        padding: 2px 6px;
+        border-radius: 4px;
+        z-index: 5;
+        border: 1px solid var(--border2);
+        pointer-events: none;
+      }
+
+      /* ── BOTTOM SECTIONS ── */
+      .bottom-grid {
+        max-width: 1380px;
+        margin: 40px auto 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      .info-box {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .info-box-head {
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      table.info-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+      }
+
+      table.info-table th {
+        padding: 8px 16px;
+        text-align: left;
+        color: var(--muted);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: rgba(20, 28, 46, 0.8);
+      }
+
+      table.info-table td {
+        padding: 8px 16px;
+        border-top: 1px solid rgba(30, 45, 71, 0.5);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.73rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 100px;
+        padding: 2px 10px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        font-family: "JetBrains Mono", monospace;
+        gap: 4px;
+      }
+
+      .pill-card {
+        background: rgba(139, 92, 246, 0.15);
+        color: #a78bfa;
+      }
+      .pill-fk {
+        background: rgba(96, 165, 250, 0.15);
+        color: var(--fk);
+      }
+      .pill-weak {
+        background: rgba(248, 113, 113, 0.15);
+        color: var(--weak);
+      }
+      .pill-int {
+        background: rgba(52, 211, 153, 0.15);
+        color: var(--uk);
+      }
+
+      .enums-box {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .enums-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1px;
+        background: var(--border);
+      }
+
+      .enum-cell {
+        background: var(--surface2);
+        padding: 12px 14px;
+      }
+
+      .enum-title {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-bottom: 7px;
+        color: #a78bfa;
+      }
+
+      .enum-val {
+        display: block;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.67rem;
+        color: var(--muted);
+        padding: 2px 0;
+      }
+
+      .antipattern-box {
+        grid-column: 1 / -1;
+        background: rgba(239, 68, 68, 0.05);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        border-radius: 12px;
+        padding: 18px 20px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.78rem;
+        line-height: 1.7;
+      }
+
+      .antipattern-box strong {
+        color: #fca5a5;
+      }
+      .antipattern-box code {
+        background: rgba(239, 68, 68, 0.12);
+        padding: 1px 6px;
+        border-radius: 3px;
+        color: #f87171;
+      }
+
+      footer {
+        text-align: center;
+        margin-top: 48px;
+        color: var(--dim);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.7rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="header-badge">⛪ Arquitectura de Software · Corte 1</div>
+        <h1>Modelo Entidad-Relación</h1>
+        <p>
+          ERP Iglesias · Spring Boot + JPA + PostgreSQL · Basado en código
+          fuente real
+        </p>
+      </header>
+
+      <div class="legend">
+        <div class="leg">
+          <div class="leg-key b-pk">PK</div>
+          Primary Key
+        </div>
+        <div class="leg">
+          <div class="leg-key b-fk">FK</div>
+          Foreign Key (@ManyToOne)
+        </div>
+        <div class="leg">
+          <div class="leg-key b-uk">UK</div>
+          Unique
+        </div>
+        <div class="leg">
+          <div class="leg-key b-wk">⚠</div>
+          Referencia débil (Long sin FK)
+        </div>
+        <div class="leg" style="margin-left: 12px">
+          <svg width="40" height="14">
+            <line
+              x1="0"
+              y1="7"
+              x2="40"
+              y2="7"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+              stroke-dasharray="0"
+            />
+          </svg>
+          FK formal
+        </div>
+        <div class="leg">
+          <svg width="40" height="14">
+            <line
+              x1="0"
+              y1="7"
+              x2="40"
+              y2="7"
+              stroke="#f87171"
+              stroke-width="1.5"
+              stroke-dasharray="5,3"
+            />
+          </svg>
+          Ref. débil / polimórfica
+        </div>
+      </div>
+
+      <!-- DIAGRAM -->
+      <div class="canvas-wrap">
+        <div class="canvas">
+          <!-- SVG LINES -->
+          <svg
+            class="lines-svg"
+            viewBox="0 0 1380 920"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <marker
+                id="arr-blue"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L0,6 L8,3 z" fill="#60a5fa" opacity="0.8" />
+              </marker>
+              <marker
+                id="arr-red"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L0,6 L8,3 z" fill="#f87171" opacity="0.8" />
+              </marker>
+              <marker
+                id="arr-blue-start"
+                markerWidth="8"
+                markerHeight="8"
+                refX="2"
+                refY="3"
+                orient="auto"
+              >
+                <circle cx="3" cy="3" r="2.5" fill="#60a5fa" opacity="0.7" />
+              </marker>
+              <marker
+                id="arr-red-start"
+                markerWidth="8"
+                markerHeight="8"
+                refX="2"
+                refY="3"
+                orient="auto"
+              >
+                <circle cx="3" cy="3" r="2.5" fill="#f87171" opacity="0.7" />
+              </marker>
+            </defs>
+
+            <!-- Church → Person (1:N) -->
+            <path
+              d="M 645 140 Q 540 180 420 230"
+              fill="none"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+              opacity="0.7"
+              marker-start="url(#arr-blue-start)"
+              marker-end="url(#arr-blue)"
+            />
+
+            <!-- Church → Course (1:N) -->
+            <path
+              d="M 745 140 Q 870 180 990 230"
+              fill="none"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+              opacity="0.7"
+              marker-start="url(#arr-blue-start)"
+              marker-end="url(#arr-blue)"
+            />
+
+            <!-- Person → Enrollment (1:N) -->
+            <path
+              d="M 380 450 Q 480 460 580 460"
+              fill="none"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+              opacity="0.7"
+              marker-start="url(#arr-blue-start)"
+              marker-end="url(#arr-blue)"
+            />
+
+            <!-- Course → Enrollment (1:N) -->
+            <path
+              d="M 990 380 Q 900 430 800 460"
+              fill="none"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+              opacity="0.7"
+              marker-start="url(#arr-blue-start)"
+              marker-end="url(#arr-blue)"
+            />
+
+            <!-- Person → Offering (1:N) -->
+            <path
+              d="M 240 450 Q 220 490 240 520"
+              fill="none"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+              opacity="0.7"
+              marker-start="url(#arr-blue-start)"
+              marker-end="url(#arr-blue)"
+            />
+
+            <!-- Enrollment → Payment (weak ref) -->
+            <path
+              d="M 690 700 Q 690 720 690 700"
+              fill="none"
+              stroke="#f87171"
+              stroke-width="0"
+              opacity="0"
+            />
+            <path
+              d="M 700 700 L 700 700"
+              fill="none"
+              stroke="#f87171"
+              stroke-width="1.5"
+              opacity="0"
+            />
+            <!-- enrollment bottom to payment top -->
+            <path
+              d="M 660 660 L 660 700"
+              fill="none"
+              stroke="#f87171"
+              stroke-width="1.5"
+              opacity="0.6"
+              stroke-dasharray="5,3"
+              marker-end="url(#arr-red)"
+            />
+
+            <!-- Offering → Payment (weak ref) -->
+            <path
+              d="M 310 660 Q 400 720 580 740"
+              fill="none"
+              stroke="#f87171"
+              stroke-width="1.5"
+              opacity="0.6"
+              stroke-dasharray="5,3"
+              marker-end="url(#arr-red)"
+            />
+
+            <!-- AppUser standalone note line -->
+            <path
+              d="M 1080 720 Q 1000 710 940 660"
+              fill="none"
+              stroke="#3b82f6"
+              stroke-width="1"
+              opacity="0.3"
+              stroke-dasharray="3,4"
+            />
+          </svg>
+
+          <!-- Cardinality Labels -->
+          <div
+            class="card-label"
+            style="left: 490px; top: 170px; color: #60a5fa"
+          >
+            1 : N
+          </div>
+          <div
+            class="card-label"
+            style="left: 800px; top: 170px; color: #60a5fa"
+          >
+            1 : N
+          </div>
+          <div
+            class="card-label"
+            style="left: 460px; top: 450px; color: #60a5fa"
+          >
+            1 : N
+          </div>
+          <div
+            class="card-label"
+            style="left: 870px; top: 420px; color: #60a5fa"
+          >
+            1 : N
+          </div>
+          <div
+            class="card-label"
+            style="left: 185px; top: 475px; color: #60a5fa"
+          >
+            1 : N
+          </div>
+          <div
+            class="card-label"
+            style="left: 625px; top: 676px; color: #f87171"
+          >
+            1 : 1 ⚠
+          </div>
+          <div
+            class="card-label"
+            style="left: 370px; top: 700px; color: #f87171"
+          >
+            1 : 1 ⚠
+          </div>
+
+          <!-- ══ ENTITY: Church ══ -->
+          <div class="entity" id="e-church">
+            <div
+              class="entity-head"
+              style="border-top: 3px solid var(--c-church)"
+            >
+              <div class="entity-title-row">
+                <div
+                  class="entity-dot"
+                  style="background: var(--c-church)"
+                ></div>
+                <span class="entity-name">Church</span>
+              </div>
+              <span class="entity-table-name">→ churches</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-pk">PK</span
+              ><span class="field-name">id</span
+              ><span class="field-type">BIGINT</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">name</span
+              ><span class="field-type">VARCHAR NN</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">address</span
+              ><span class="field-type">VARCHAR</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">createdAt</span
+              ><span class="field-type">TIMESTAMP</span>
+            </div>
+          </div>
+
+          <!-- ══ ENTITY: Person ══ -->
+          <div class="entity" id="e-person">
+            <div
+              class="entity-head"
+              style="border-top: 3px solid var(--c-person)"
+            >
+              <div class="entity-title-row">
+                <div
+                  class="entity-dot"
+                  style="background: var(--c-person)"
+                ></div>
+                <span class="entity-name">Person</span>
+              </div>
+              <span class="entity-table-name">→ people</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-pk">PK</span
+              ><span class="field-name">id</span
+              ><span class="field-type">BIGINT</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-fk">FK</span
+              ><span class="field-name">church_id</span
+              ><span class="field-type">→ Church</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">firstName</span
+              ><span class="field-type">VARCHAR NN</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">lastName</span
+              ><span class="field-type">VARCHAR NN</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">document</span
+              ><span class="field-type">VARCHAR</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">phone</span
+              ><span class="field-type">VARCHAR</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">email</span
+              ><span class="field-type">VARCHAR</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">createdAt</span
+              ><span class="field-type">TIMESTAMP</span>
+            </div>
+          </div>
+
+          <!-- ══ ENTITY: Course ══ -->
+          <div class="entity" id="e-course">
+            <div
+              class="entity-head"
+              style="border-top: 3px solid var(--c-course)"
+            >
+              <div class="entity-title-row">
+                <div
+                  class="entity-dot"
+                  style="background: var(--c-course)"
+                ></div>
+                <span class="entity-name">Course</span>
+              </div>
+              <span class="entity-table-name">→ courses</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-pk">PK</span
+              ><span class="field-name">id</span
+              ><span class="field-type">BIGINT</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-fk">FK</span
+              ><span class="field-name">church_id</span
+              ><span class="field-type">→ Church</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">name</span
+              ><span class="field-type">VARCHAR NN</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">description</span
+              ><span class="field-type">VARCHAR</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">price</span
+              ><span class="field-type">DECIMAL(12,2)</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">active</span
+              ><span class="field-type">BOOLEAN</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">createdAt</span
+              ><span class="field-type">TIMESTAMP</span>
+            </div>
+          </div>
+
+          <!-- ══ ENTITY: Enrollment ══ -->
+          <div class="entity" id="e-enroll">
+            <div
+              class="entity-head"
+              style="border-top: 3px solid var(--c-enroll)"
+            >
+              <div class="entity-title-row">
+                <div
+                  class="entity-dot"
+                  style="background: var(--c-enroll)"
+                ></div>
+                <span class="entity-name">Enrollment</span>
+              </div>
+              <span class="entity-table-name">→ enrollments</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-pk">PK</span
+              ><span class="field-name">id</span
+              ><span class="field-type">BIGINT</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-fk">FK</span
+              ><span class="field-name">person_id</span
+              ><span class="field-type">→ Person</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-fk">FK</span
+              ><span class="field-name">course_id</span
+              ><span class="field-type">→ Course</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">status</span
+              ><span class="field-type">ENUM</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-wk">⚠</span
+              ><span class="field-name">paymentId</span
+              ><span class="field-type">BIGINT débil</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">createdAt</span
+              ><span class="field-type">TIMESTAMP</span>
+            </div>
+          </div>
+
+          <!-- ══ ENTITY: Offering ══ -->
+          <div class="entity" id="e-offer">
+            <div
+              class="entity-head"
+              style="border-top: 3px solid var(--c-offer)"
+            >
+              <div class="entity-title-row">
+                <div
+                  class="entity-dot"
+                  style="background: var(--c-offer)"
+                ></div>
+                <span class="entity-name">Offering</span>
+              </div>
+              <span class="entity-table-name">→ offerings</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-pk">PK</span
+              ><span class="field-name">id</span
+              ><span class="field-type">BIGINT</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-fk">FK</span
+              ><span class="field-name">person_id</span
+              ><span class="field-type">→ Person</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">amount</span
+              ><span class="field-type">DECIMAL(12,2)</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">concept</span
+              ><span class="field-type">VARCHAR NN</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">status</span
+              ><span class="field-type">ENUM</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-wk">⚠</span
+              ><span class="field-name">paymentId</span
+              ><span class="field-type">BIGINT débil</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">createdAt</span
+              ><span class="field-type">TIMESTAMP</span>
+            </div>
+          </div>
+
+          <!-- ══ ENTITY: Payment ══ -->
+          <div class="entity" id="e-pay">
+            <div class="entity-head" style="border-top: 3px solid var(--c-pay)">
+              <div class="entity-title-row">
+                <div class="entity-dot" style="background: var(--c-pay)"></div>
+                <span class="entity-name">Payment</span>
+              </div>
+              <span class="entity-table-name">→ payments</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-pk">PK</span
+              ><span class="field-name">id</span
+              ><span class="field-type">BIGINT</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">type</span
+              ><span class="field-type">ENUM</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">status</span
+              ><span class="field-type">ENUM</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">amount</span
+              ><span class="field-type">DECIMAL(12,2)</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">attempts</span
+              ><span class="field-type">INT</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-wk">⚠</span
+              ><span class="field-name">referenceId</span
+              ><span class="field-type">BIGINT polimórfico</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">createdAt</span
+              ><span class="field-type">TIMESTAMP</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">updatedAt</span
+              ><span class="field-type">TIMESTAMP</span>
+            </div>
+          </div>
+
+          <!-- ══ ENTITY: AppUser ══ -->
+          <div class="entity" id="e-user">
+            <div
+              class="entity-head"
+              style="border-top: 3px solid var(--c-user)"
+            >
+              <div class="entity-title-row">
+                <div class="entity-dot" style="background: var(--c-user)"></div>
+                <span class="entity-name">AppUser</span>
+              </div>
+              <span class="entity-table-name">→ users</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-pk">PK</span
+              ><span class="field-name">id</span
+              ><span class="field-type">BIGINT</span>
+            </div>
+            <div class="field">
+              <span class="field-badge b-uk">UK</span
+              ><span class="field-name">email</span
+              ><span class="field-type">VARCHAR NN</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">passwordHash</span
+              ><span class="field-type">VARCHAR NN</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">role</span
+              ><span class="field-type">ENUM</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">active</span
+              ><span class="field-type">BOOLEAN</span>
+            </div>
+            <div class="field">
+              <span class="field-badge"></span
+              ><span class="field-name">createdAt</span
+              ><span class="field-type">TIMESTAMP</span>
+            </div>
+          </div>
+
+          <!-- AppUser label -->
+          <div
+            style="
+              position: absolute;
+              left: 1080px;
+              top: 652px;
+              font-family: &quot;JetBrains Mono&quot;, monospace;
+              font-size: 0.65rem;
+              color: var(--muted);
+              background: rgba(59, 130, 246, 0.08);
+              border: 1px solid rgba(59, 130, 246, 0.2);
+              border-radius: 4px;
+              padding: 3px 8px;
+            "
+          >
+            Autenticación independiente
+          </div>
+        </div>
+        <!-- .canvas -->
+      </div>
+      <!-- .canvas-wrap -->
+
+      <!-- BOTTOM INFO -->
+      <div class="bottom-grid">
+        <!-- Relations table -->
+        <div class="info-box">
+          <div class="info-box-head" style="color: #a78bfa">🔗 Relaciones</div>
+          <table class="info-table">
+            <thead>
+              <tr>
+                <th>Entidad A</th>
+                <th>→</th>
+                <th>Entidad B</th>
+                <th>Cardinalidad</th>
+                <th>Tipo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color: #10b981">Church</td>
+                <td style="color: var(--muted)">→</td>
+                <td style="color: #f59e0b">Person</td>
+                <td><span class="pill pill-card">1 : N</span></td>
+                <td><span class="pill pill-fk">FK</span></td>
+              </tr>
+              <tr>
+                <td style="color: #10b981">Church</td>
+                <td style="color: var(--muted)">→</td>
+                <td style="color: #8b5cf6">Course</td>
+                <td><span class="pill pill-card">1 : N</span></td>
+                <td><span class="pill pill-fk">FK</span></td>
+              </tr>
+              <tr>
+                <td style="color: #f59e0b">Person</td>
+                <td style="color: var(--muted)">↔</td>
+                <td style="color: #8b5cf6">Course</td>
+                <td><span class="pill pill-card">N : M</span></td>
+                <td><span class="pill pill-int">Enrollment</span></td>
+              </tr>
+              <tr>
+                <td style="color: #f59e0b">Person</td>
+                <td style="color: var(--muted)">→</td>
+                <td style="color: #ef4444">Enrollment</td>
+                <td><span class="pill pill-card">1 : N</span></td>
+                <td><span class="pill pill-fk">FK</span></td>
+              </tr>
+              <tr>
+                <td style="color: #8b5cf6">Course</td>
+                <td style="color: var(--muted)">→</td>
+                <td style="color: #ef4444">Enrollment</td>
+                <td><span class="pill pill-card">1 : N</span></td>
+                <td><span class="pill pill-fk">FK</span></td>
+              </tr>
+              <tr>
+                <td style="color: #f59e0b">Person</td>
+                <td style="color: var(--muted)">→</td>
+                <td style="color: #eab308">Offering</td>
+                <td><span class="pill pill-card">1 : N</span></td>
+                <td><span class="pill pill-fk">FK</span></td>
+              </tr>
+              <tr>
+                <td style="color: #ef4444">Enrollment</td>
+                <td style="color: var(--muted)">→</td>
+                <td style="color: #06b6d4">Payment</td>
+                <td><span class="pill pill-card">1 : 1</span></td>
+                <td><span class="pill pill-weak">⚠ débil</span></td>
+              </tr>
+              <tr>
+                <td style="color: #eab308">Offering</td>
+                <td style="color: var(--muted)">→</td>
+                <td style="color: #06b6d4">Payment</td>
+                <td><span class="pill pill-card">1 : 1</span></td>
+                <td><span class="pill pill-weak">⚠ débil</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ENUMs -->
+        <div class="enums-box">
+          <div
+            class="info-box-head"
+            style="
+              color: #a78bfa;
+              padding: 14px 18px;
+              border-bottom: 1px solid var(--border);
+            "
+          >
+            🏷 Enumeraciones
+          </div>
+          <div class="enums-grid">
+            <div class="enum-cell">
+              <div class="enum-title">UserRole</div>
+              <span class="enum-val">ADMIN</span>
+              <span class="enum-val">USER</span>
+            </div>
+            <div class="enum-cell">
+              <div class="enum-title">EnrollmentStatus</div>
+              <span class="enum-val">PENDIENTE</span>
+              <span class="enum-val">ACTIVO</span>
+              <span class="enum-val">COMPLETADO</span>
+              <span class="enum-val">CANCELADO</span>
+            </div>
+            <div class="enum-cell">
+              <div class="enum-title">OfferingStatus</div>
+              <span class="enum-val">PENDIENTE</span>
+              <span class="enum-val">COMPLETADO</span>
+              <span class="enum-val">CANCELADO</span>
+            </div>
+            <div class="enum-cell">
+              <div class="enum-title">PaymentType</div>
+              <span class="enum-val">ENROLLMENT</span>
+              <span class="enum-val">OFFERING</span>
+            </div>
+            <div class="enum-cell">
+              <div class="enum-title">PaymentStatus</div>
+              <span class="enum-val">INICIADO</span>
+              <span class="enum-val">PROCESANDO</span>
+              <span class="enum-val">COMPLETADO</span>
+              <span class="enum-val">FALLIDO</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anti-pattern warning -->
+        <div class="antipattern-box">
+          <strong
+            >⚠ Anti-patrón detectado — Referencia polimórfica sin FK formal
+            (documentar en el ADR)</strong
+          ><br /><br />
+          <code>Payment.referenceId</code> es un <code>Long</code> genérico sin
+          <code>@ManyToOne</code>. Según el valor de
+          <code>Payment.type</code> apunta a <code>Enrollment</code> o
+          <code>Offering</code>, pero la base de datos no puede validar esta
+          relación. Del mismo modo, <code>Enrollment.paymentId</code> y
+          <code>Offering.paymentId</code> son <code>Long</code> sueltos sin FK
+          real.<br /><br />
+          <strong>Propuesta de mejora (ADR):</strong> agregar
+          <code>@ManyToOne Payment payment</code> en Enrollment y Offering con
+          FK formal, eliminando la referencia polimórfica implícita.
+        </div>
+      </div>
+
+      <footer>
+        <p>
+          ERP Iglesias · Arquitectura de Software · Parcial Corte 1 · 7
+          entidades · 8 relaciones · Stack: Java 17 + Spring Boot + JPA +
+          PostgreSQL + Angular + Docker
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      // Draw precise SVG lines connecting entities after layout
+      function getCenter(el) {
+        const r = el.getBoundingClientRect();
+        const pr = el.offsetParent.getBoundingClientRect();
+        return {
+          top: { x: el.offsetLeft + el.offsetWidth / 2, y: el.offsetTop },
+          bottom: {
+            x: el.offsetLeft + el.offsetWidth / 2,
+            y: el.offsetTop + el.offsetHeight,
+          },
+          left: { x: el.offsetLeft, y: el.offsetTop + el.offsetHeight / 2 },
+          right: {
+            x: el.offsetLeft + el.offsetWidth,
+            y: el.offsetTop + el.offsetHeight / 2,
+          },
+        };
+      }
+
+      function drawLine(svg, x1, y1, x2, y2, color, dashed) {
+        const path = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path",
+        );
+        const mx = (x1 + x2) / 2;
+        const my = (y1 + y2) / 2;
+        // smooth bezier
+        const d = `M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`;
+        path.setAttribute("d", d);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", color);
+        path.setAttribute("stroke-width", "1.6");
+        path.setAttribute("opacity", "0.75");
+        if (dashed) path.setAttribute("stroke-dasharray", "5,3");
+        path.setAttribute(
+          "marker-end",
+          dashed ? "url(#arr-red)" : "url(#arr-blue)",
+        );
+        svg.appendChild(path);
+      }
+
+      window.addEventListener("load", () => {
+        const svg = document.querySelector(".lines-svg");
+        // Clear static paths
+        svg.querySelectorAll("path:not([id])").forEach((p) => p.remove());
+
+        const church = document.getElementById("e-church");
+        const person = document.getElementById("e-person");
+        const course = document.getElementById("e-course");
+        const enroll = document.getElementById("e-enroll");
+        const offer = document.getElementById("e-offer");
+        const pay = document.getElementById("e-pay");
+
+        const c = getCenter(church);
+        const pe = getCenter(person);
+        const co = getCenter(course);
+        const en = getCenter(enroll);
+        const of = getCenter(offer);
+        const pa = getCenter(pay);
+
+        const BLUE = "#60a5fa";
+        const RED = "#f87171";
+
+        // Church → Person
+        drawLine(
+          svg,
+          c.bottom.x - 40,
+          c.bottom.y,
+          pe.top.x,
+          pe.top.y,
+          BLUE,
+          false,
+        );
+        // Church → Course
+        drawLine(
+          svg,
+          c.bottom.x + 40,
+          c.bottom.y,
+          co.top.x,
+          co.top.y,
+          BLUE,
+          false,
+        );
+        // Person → Enrollment
+        drawLine(
+          svg,
+          pe.right.x,
+          pe.right.y + 20,
+          en.left.x,
+          en.left.y - 20,
+          BLUE,
+          false,
+        );
+        // Course → Enrollment
+        drawLine(
+          svg,
+          co.left.x,
+          co.left.y + 20,
+          en.right.x,
+          en.right.y - 20,
+          BLUE,
+          false,
+        );
+        // Person → Offering
+        drawLine(
+          svg,
+          pe.bottom.x - 30,
+          pe.bottom.y,
+          of.top.x,
+          of.top.y,
+          BLUE,
+          false,
+        );
+        // Enrollment → Payment (weak)
+        drawLine(svg, en.bottom.x, en.bottom.y, pa.top.x, pa.top.y, RED, true);
+        // Offering → Payment (weak)
+        drawLine(
+          svg,
+          of.right.x,
+          of.right.y + 30,
+          pa.left.x,
+          pa.left.y,
+          RED,
+          true,
+        );
+      });
+    </script>
+  </body>
+</html>
