@@ -14,8 +14,8 @@ El trabajo consiste en analizar la arquitectura actual del sistema, identificar 
 
 ## Integrantes
 
-- Sebastián Osorio
-- [Nombre del compañero]
+- Juan Sebastián Osorio Fierro
+- Karina Cantillo Plaza
 
 ---
 
