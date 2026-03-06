@@ -4,42 +4,60 @@
 
 Este repositorio contiene el desarrollo del **Parcial 1 de Arquitectura de Software**, enfocado en la **auditoría, documentación y refactorización incremental** del sistema **ERP Iglesias**.
 
-El trabajo consiste en analizar la arquitectura actual del sistema, identificar problemas de diseño y proponer mejoras aplicando:
+El objetivo es analizar la arquitectura actual del sistema, identificar problemas de diseño y proponer mejoras aplicando principios de ingeniería de software.
 
-- Principios **SOLID**
-- Buenas prácticas de **Clean Code**
-- Documentación de decisiones mediante **ADR (Architecture Decision Records)**
+Se aplican:
 
----
-
-## Integrantes
-
-- Juan Sebastián Osorio Fierro
-- Karina Cantillo Plaza
+- **SOLID**
+- **Clean Code**
+- **Architecture Decision Records (ADR)**
 
 ---
 
-## Propósito del repositorio
+# Contenido
 
-Este repositorio tiene como objetivo evidenciar el proceso de refactorización de un sistema existente, documentando tanto las decisiones arquitectónicas como los cambios implementados sobre el código fuente.
-
-La refactorización se realiza de manera incremental para evitar afectar el comportamiento funcional de la aplicación y para mantener la estabilidad del sistema.
-
----
-
-## Objetivos
-
-- Identificar problemas arquitectónicos y de diseño en el sistema actual.
-- Proponer decisiones de arquitectura documentadas mediante ADR.
-- Implementar cambios controlados aplicando principios SOLID.
-- Mejorar la mantenibilidad, legibilidad y organización del código.
-- Documentar evidencias técnicas mediante imágenes y commits.
+- [Integrantes](#integrantes)
+- [Propósito del repositorio](#propósito-del-repositorio)
+- [Objetivos](#objetivos)
+- [Tecnologías del sistema](#tecnologías-del-sistema)
+- [Arquitectura del sistema](#arquitectura-del-sistema)
+- [Modelo Entidad Relación](#modelo-entidad-relación)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [ADR — Architecture Decision Records](#adr--architecture-decision-records)
+- [Evidencias](#evidencias)
+- [Cambios implementados](#cambios-implementados)
+- [Cómo ejecutar el proyecto](#cómo-ejecutar-el-proyecto)
 
 ---
 
-## Tecnologías del sistema
+# Integrantes
 
-### Backend
+- **Juan Sebastián Osorio Fierro**
+- **Karina Cantillo Plaza**
+
+---
+
+# Propósito del repositorio
+
+Este repositorio tiene como objetivo evidenciar el proceso de **refactorización arquitectónica de un sistema existente**, documentando tanto las decisiones arquitectónicas como los cambios implementados sobre el código fuente.
+
+La refactorización se realiza de forma **incremental**, con el fin de evitar afectar el comportamiento funcional del sistema y mantener su estabilidad.
+
+---
+
+# Objetivos
+
+- Identificar problemas arquitectónicos del sistema actual.
+- Proponer mejoras de diseño utilizando **principios SOLID**.
+- Documentar decisiones mediante **Architecture Decision Records (ADR)**.
+- Mejorar la mantenibilidad y legibilidad del código.
+- Evidenciar cambios mediante **commits e imágenes de evidencia**.
+
+---
+
+# Tecnologías del sistema
+
+## Backend
 
 - Java 17
 - Spring Boot
@@ -48,100 +66,154 @@ La refactorización se realiza de manera incremental para evitar afectar el comp
 - PostgreSQL
 - JWT
 
-### Frontend
+## Frontend
 
 - Angular
 
-### Infraestructura
+## Infraestructura
 
 - Docker
 - Docker Compose
 
 ---
 
-## Estructura del repositorio
+# Arquitectura del sistema
 
-```text
+El sistema sigue una arquitectura basada en capas:
+
+Controller
+↓
+Service
+↓
+Repository
+↓
+Database
+
+Esta arquitectura permite:
+
+- Separación de responsabilidades
+- Mayor mantenibilidad
+- Mejor organización del código
+- Facilidad de pruebas
+
+---
+
+# Modelo Entidad Relación
+
+```mermaid
+erDiagram
+
+PERSON {
+    int id
+    string name
+    string email
+}
+
+CHURCH {
+    int id
+    string name
+    string city
+}
+
+USER {
+    int id
+    string username
+    string password
+}
+
+PERSON ||--o{ CHURCH : belongs
+USER ||--|| PERSON : linked
+
+```
+
+Este modelo representa las entidades principales del sistema y sus relaciones.
+
+Estructura del repositorio
+
+```java
 .
 ├── README.md
 ├── docs
-│   ├── refactorizacion.md
-│   ├── adr
-│   │   ├── ADR-001-auth-service.md
-│   │   ├── ADR-002-church-service.md
-│   │   ├── ADR-003-person-service.md
-│   │   ├── ADR-004-centralizar-require-church.md
-│   │   ├── ADR-005-separacion-dtos.md
-│   │   ├── ADR-006-global-exception-handler.md
-│   │   ├── ADR-007-mappers.md
-│   │   ├── ADR-008-api-routes.md
-│   │   ├── ADR-009-factory-method-entidades.md
-│   │   └── ADR-010-externalizacion-secretos.md
-│   └── img
-│       └── evidencias
+│ ├── refactorizacion.md
+│ ├── adr
+│ │ ├── ADR-001-auth-service.md
+│ │ ├── ADR-002-church-service.md
+│ │ ├── ADR-003-person-service.md
+│ │ ├── ADR-004-centralizar-require-church.md
+│ │ ├── ADR-005-separacion-dtos.md
+│ │ ├── ADR-006-global-exception-handler.md
+│ │ ├── ADR-007-mappers.md
+│ │ ├── ADR-008-api-routes.md
+│ │ ├── ADR-009-factory-method-entidades.md
+│ │ └── ADR-010-externalizacion-secretos.md
+│ └── img
+│ └── evidencias
 ├── backend
 ├── frontend
 └── docker-compose.yml
+ADR — Architecture Decision Records
 ```
 
-Documentación principal
-
-La documentación del proceso de refactorización se encuentra en:
-
-docs/refactorizacion.md
-
-Allí se documenta:
-
-diagnóstico arquitectónico
-
-aplicación de SOLID y Clean Code
-
-modelo entidad relación
-
-cambios implementados
-
-evidencia visual antes y después
-
-commits asociados
-
-ADR
-
-Las decisiones arquitectónicas se documentan por separado en:
+Las decisiones arquitectónicas se documentan en:
 
 docs/adr/
 
-Se plantean 10 decisiones arquitectónicas, de las cuales 5 son implementadas durante el parcial.
+Se proponen 10 decisiones arquitectónicas, de las cuales 5 se implementan durante el parcial.
 
-Evidencias
+Tabla de decisiones
+
+- ADR Decisión Implementado
+- ADR-001 Introducción de AuthService Sí
+- ADR-002 Introducción de ChurchService Sí
+- ADR-003 Introducción de PersonService Sí
+- ADR-004 Centralizar lógica requireChurch No
+- ADR-005 Separación de DTOs Sí
+- ADR-006 GlobalExceptionHandler Sí
+- ADR-007 Implementación de Mappers No
+- ADR-008 Organización de rutas API No
+- ADR-009 Factory Method para entidades No
+- ADR-010 Externalización de secretos No
+
+# Evidencias
 
 Las evidencias visuales se almacenan en:
 
-docs/img/evidencias/
+- docs/img/evidencias/
 
 Ejemplos de evidencias:
 
-antes y después de controladores
-
-creación de servicios
-
-separación de DTOs
-
-manejo global de excepciones
-
-estructura refactorizada del proyecto
+- Antes y después de controladores
+- Creación de servicios
+- Separación de DTOs
+- Manejo global de excepciones
+- Estructura refactorizada del proyecto
 
 Cambios implementados
 
-Los cambios implementados en el sistema son:
+- Los cambios implementados en el sistema incluyen:
 
-Introducción de AuthService
+1. Introducción de AuthService
+2. Introducción de ChurchService
+3. Introducción de PersonService
+4. Separación de DTOs
+5. Implementación de GlobalExceptionHandler
 
-Introducción de ChurchService
+Cada cambio se registra con un commit independiente, permitiendo evidenciar el proceso de refactorización.
 
-Introducción de PersonService
+```
+Cómo ejecutar el proyecto
+1. Clonar el repositorio
+git clone <repository-url>
+2. Levantar los contenedores
+docker-compose up -d
+3. Ejecutar backend
+El backend se ejecuta en:
 
-Separación de DTOs
+http://localhost:8080
+```
 
-Implementación de GlobalExceptionHandler
+# Conclusión
 
-Cada implementación debe registrarse con un commit independiente para usarlo también como evidencia del proceso.
+- Este proyecto demuestra el proceso de auditoría y refactorización de un sistema existente, aplicando principios de arquitectura de software y buenas prácticas de ingeniería para mejorar la calidad del código.
+
+---
