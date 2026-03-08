@@ -1,11 +1,13 @@
 package com.iglesia;
 
+import com.iglesia.JwtService;
+import com.iglesia.AppUser;
+import com.iglesia.exception.BusinessRuleException;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -23,28 +25,19 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
+    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         AppUser user = appUserRepository.findByEmailIgnoreCase(request.email())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas"));
+            .orElseThrow(() -> new BusinessRuleException("Credenciales inválidas"));
 
         if (!user.isActive() || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
+            throw new BusinessRuleException("Credenciales inválidas");
         }
 
         String token = jwtService.generateToken(user);
         return new LoginResponse(token, user.getEmail(), user.getRole().name());
     }
 
-
-    public record LoginRequest(
-        @Email @NotBlank String email,
-        @NotBlank String password
-    ) {}
-
-    public record LoginResponse(
-        String token,
-        String email,
-        String role
-    ) {}
-
+    // DTOs internos
+    public record LoginRequest(@Email @NotBlank String email, @NotBlank String password) {}
+    public record LoginResponse(String token, String email, String role) {}
 }

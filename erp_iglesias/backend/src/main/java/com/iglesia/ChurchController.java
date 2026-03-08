@@ -1,53 +1,41 @@
 package com.iglesia;
 
-import com.iglesia.service.ChurchService; // Importar el servicio
+import com.iglesia.service.ChurchService;
+import com.iglesia.Church;
+import com.iglesia.exception.BusinessRuleException;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/church")
 public class ChurchController {
-    private final ChurchRepository churchRepository;
-    private final ChurchService churchService; // Nuevo
+    private final ChurchService churchService;
 
-    public ChurchController(ChurchRepository churchRepository, ChurchService churchService) {
-        this.churchRepository = churchRepository;
+    public ChurchController(ChurchService churchService) {
         this.churchService = churchService;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ChurchResponse create(@RequestBody ChurchRequest request) {
-        if (churchRepository.count() > 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe una iglesia registrada");
+    public ChurchResponse create(@Valid @RequestBody ChurchRequest request) {
+        if (churchService.exists()) {
+            throw new BusinessRuleException("Ya existe una iglesia registrada");
         }
-        Church church = new Church();
-        church.setName(request.name());
-        church.setAddress(request.address());
-        churchRepository.save(church);
+        Church church = churchService.create(request.name(), request.address());
         return ChurchResponse.from(church);
     }
 
     @GetMapping
     public ChurchResponse get() {
-        // Usar el servicio
-        Church church = churchService.getRequiredChurch();
+        Church church = churchService.getRequiredChurch(); // lanza ChurchNotFoundException
         return ChurchResponse.from(church);
     }
 
-    public record ChurchRequest(
-        @NotBlank String name,
-        String address
-    ) {}
-
-    public record ChurchResponse(
-        Long id,
-        String name,
-        String address
-    ) {
+    // DTOs internos
+    public record ChurchRequest(@NotBlank String name, String address) {}
+    public record ChurchResponse(Long id, String name, String address) {
         public static ChurchResponse from(Church church) {
             return new ChurchResponse(church.getId(), church.getName(), church.getAddress());
         }
