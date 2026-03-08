@@ -19,7 +19,7 @@ services:
       DB_PASSWORD: postgres
       JWT_SECRET: super-secret-key-change-please-32bytes
     ports:
-      - "8085:8080"
+      - "8080:8080"
     depends_on:
       - db
 

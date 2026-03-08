@@ -7,6 +7,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.iglesia.service.ChurchService;
+import com.iglesia.exception.ChurchNotFoundException;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -14,41 +17,52 @@ import java.util.List;
 @RequestMapping("/api/courses")
 public class CourseController {
     private final CourseRepository courseRepository;
-    private final ChurchRepository churchRepository;
-
-    public CourseController(CourseRepository courseRepository, ChurchRepository churchRepository) {
-        this.courseRepository = courseRepository;
-        this.churchRepository = churchRepository;
-    }
-
+     private final ChurchService churchService; // Nuevo
+     
+    public CourseController(CourseRepository courseRepository, ChurchService churchService) {
+    this.courseRepository = courseRepository;
+    this.churchService = churchService;
+}
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public CourseResponse create(@RequestBody CourseRequest request) {
-        Church church = requireChurch();
-        Course course = new Course();
-        course.setName(request.name());
-        course.setDescription(request.description());
-        course.setPrice(request.price());
-        course.setChurch(church);
-        courseRepository.save(course);
-        return CourseResponse.from(course);
+        try {
+            Church church = churchService.getRequiredChurch();
+            
+            Course course = new Course();
+            course.setName(request.name());
+            course.setDescription(request.description());
+            course.setPrice(request.price());
+            course.setChurch(church);
+            
+            courseRepository.save(course);
+            return CourseResponse.from(course);
+            
+        } catch (ChurchNotFoundException e) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, 
+                "Debe registrar una iglesia primero"
+            );
+        }
     }
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('CLIENT')")
     @GetMapping
     public List<CourseResponse> list() {
-        Church church = requireChurch();
-        return courseRepository.findAllByChurchId(church.getId())
-            .stream()
-            .map(CourseResponse::from)
-            .toList();
-    }
-
-    private Church requireChurch() {
-        return churchRepository.findAll()
-            .stream()
-            .findFirst()
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe registrar una iglesia primero"));
+        try {
+            Church church = churchService.getRequiredChurch();
+            
+            return courseRepository.findAllByChurchId(church.getId())
+                .stream()
+                .map(CourseResponse::from)
+                .toList();
+                
+        } catch (ChurchNotFoundException e) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, 
+                "Debe registrar una iglesia primero"
+            );
+        }
     }
 
     public record CourseRequest(
