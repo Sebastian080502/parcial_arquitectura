@@ -1,219 +1,250 @@
-# ERP Iglesias — Refactorización Arquitectónica
+# 🏛️ ERP Iglesias — Refactorización Arquitectónica
 
-## Parcial 1 — Arquitectura de Software
-
-Este repositorio contiene el desarrollo del **Parcial 1 de Arquitectura de Software**, enfocado en la **auditoría, documentación y refactorización incremental** del sistema **ERP Iglesias**.
-
-El objetivo es analizar la arquitectura actual del sistema, identificar problemas de diseño y proponer mejoras aplicando principios de ingeniería de software.
-
-Se aplican:
-
-- **SOLID**
-- **Clean Code**
-- **Architecture Decision Records (ADR)**
+> **Parcial 1 — Arquitectura de Software · Sexto Semestre**  
+> Auditoría, documentación y refactorización incremental del sistema ERP Iglesias
 
 ---
 
-# Contenido
+## 👥 Integrantes
 
-- [Integrantes](#integrantes)
-- [Propósito del repositorio](#propósito-del-repositorio)
-- [Objetivos](#objetivos)
-- [Tecnologías del sistema](#tecnologías-del-sistema)
-- [Arquitectura del sistema](#arquitectura-del-sistema)
-- [Modelo Entidad Relación](#modelo-entidad-relación)
-- [Estructura del repositorio](#estructura-del-repositorio)
-- [ADR — Architecture Decision Records](#adr--architecture-decision-records)
-- [Evidencias](#evidencias)
-- [Cambios implementados](#cambios-implementados)
-- [Cómo ejecutar el proyecto](#cómo-ejecutar-el-proyecto)
+| Nombre | Rol |
+|--------|-----|
+| Juan Sebastián Osorio Fierro | Desarrollador / Arquitecto |
+| Karina Cantillo Plaza | Desarrolladora / Arquitecta |
 
 ---
 
-# Integrantes
+## 📋 Descripción del Proyecto
 
-- **Juan Sebastián Osorio Fierro**
-- **Karina Cantillo Plaza**
+**ERP Iglesias** es un sistema de gestión administrativa para iglesias que permite administrar miembros, cursos, inscripciones, ofrendas y pagos, con control de acceso basado en roles (`ADMIN` y `CLIENT`).
 
----
+Este repositorio documenta el proceso de **auditoría arquitectónica** del sistema, identificando problemas de diseño y aplicando mejoras mediante principios **SOLID**, patrones de diseño y **Architecture Decision Records (ADR)**.
 
-# Propósito del repositorio
-
-Este repositorio tiene como objetivo evidenciar el proceso de **refactorización arquitectónica de un sistema existente**, documentando tanto las decisiones arquitectónicas como los cambios implementados sobre el código fuente.
-
-La refactorización se realiza de forma **incremental**, con el fin de evitar afectar el comportamiento funcional del sistema y mantener su estabilidad.
+La refactorización se realizó de forma **incremental**, garantizando que el comportamiento funcional del sistema no se vea afectado en ningún momento.
 
 ---
 
-# Objetivos
+## 🎯 Objetivos
 
-- Identificar problemas arquitectónicos del sistema actual.
-- Proponer mejoras de diseño utilizando **principios SOLID**.
-- Documentar decisiones mediante **Architecture Decision Records (ADR)**.
-- Mejorar la mantenibilidad y legibilidad del código.
-- Evidenciar cambios mediante **commits e imágenes de evidencia**.
-
----
-
-# Tecnologías del sistema
-
-## Backend
-
-- Java 17
-- Spring Boot
-- Spring Security
-- Spring Data JPA
-- PostgreSQL
-- JWT
-
-## Frontend
-
-- Angular
-
-## Infraestructura
-
-- Docker
-- Docker Compose
+- ✅ Identificar problemas arquitectónicos del sistema original
+- ✅ Proponer 10 mejoras documentadas mediante ADRs
+- ✅ Implementar 5 de los 10 cambios propuestos
+- ✅ Evidenciar cada cambio con commits descriptivos y pruebas funcionales
+- ✅ Mejorar la mantenibilidad, legibilidad y escalabilidad del código
 
 ---
 
-# Arquitectura del sistema
+## 🛠️ Stack Tecnológico
 
-El sistema sigue una arquitectura basada en capas:
+### Backend
+| Tecnología | Versión | Uso |
+|-----------|---------|-----|
+| Java | 17 | Lenguaje principal |
+| Spring Boot | 3.2.3 | Framework backend |
+| Spring Security + JWT | jjwt 0.11.5 | Autenticación stateless |
+| Spring Data JPA + Hibernate | Hibernate 6 | ORM y persistencia |
+| PostgreSQL | Latest | Base de datos relacional |
+| Maven | 3.x | Build y dependencias |
 
-Controller
-↓
-Service
-↓
-Repository
-↓
-Database
+### Frontend
+| Tecnología | Versión | Uso |
+|-----------|---------|-----|
+| Angular | 17.3 | Framework SPA |
+| Angular Material | 17 | Componentes UI |
+| TypeScript | 5.4 | Tipado estático |
+| RxJS | 7.8 | Programación reactiva |
 
-Esta arquitectura permite:
-
-- Separación de responsabilidades
-- Mayor mantenibilidad
-- Mejor organización del código
-- Facilidad de pruebas
+### Infraestructura
+| Tecnología | Uso |
+|-----------|-----|
+| Docker + Docker Compose | Contenedores y orquestación |
+| Nginx | Reverse proxy para Angular |
 
 ---
 
-# Modelo Entidad Relación
+## 🏗️ Arquitectura del Sistema
 
-```mermaid
-erDiagram
-
-PERSON {
-    int id
-    string name
-    string email
-}
-
-CHURCH {
-    int id
-    string name
-    string city
-}
-
-USER {
-    int id
-    string username
-    string password
-}
-
-PERSON ||--o{ CHURCH : belongs
-USER ||--|| PERSON : linked
+El sistema sigue una arquitectura de **capas** con dependencias unidireccionales:
 
 ```
-
-Este modelo representa las entidades principales del sistema y sus relaciones.
-
-Estructura del repositorio
-
-```java
-.
-├── README.md
-├── docs
-│ ├── refactorizacion.md
-│ ├── adr
-│ │ ├── ADR-001-auth-service.md
-│ │ ├── ADR-002-church-service.md
-│ │ ├── ADR-003-person-service.md
-│ │ ├── ADR-004-centralizar-require-church.md
-│ │ ├── ADR-005-separacion-dtos.md
-│ │ ├── ADR-006-global-exception-handler.md
-│ │ ├── ADR-007-mappers.md
-│ │ ├── ADR-008-api-routes.md
-│ │ ├── ADR-009-factory-method-entidades.md
-│ │ └── ADR-010-externalizacion-secretos.md
-│ └── img
-│ └── evidencias
-├── backend
-├── frontend
-└── docker-compose.yml
-ADR — Architecture Decision Records
+┌─────────────────────────────────┐
+│         Angular (SPA)           │  ← Frontend
+│  services/ · models/ · components/  │
+└──────────────┬──────────────────┘
+               │ HTTP / JWT
+┌──────────────▼──────────────────┐
+│        Spring Boot API          │  ← Backend
+│  controller → service → repository  │
+│       entity · dto · exception  │
+└──────────────┬──────────────────┘
+               │ JPA
+┌──────────────▼──────────────────┐
+│          PostgreSQL             │  ← Base de datos
+└─────────────────────────────────┘
 ```
 
-Las decisiones arquitectónicas se documentan en:
+---
 
-docs/adr/
-
-Se proponen 10 decisiones arquitectónicas, de las cuales 5 se implementan durante el parcial.
-
-Tabla de decisiones
-
-- ADR Decisión Implementado
-- ADR-001 Introducción de AuthService Sí
-- ADR-002 Introducción de ChurchService Sí
-- ADR-003 Introducción de PersonService Sí
-- ADR-004 Centralizar lógica requireChurch No
-- ADR-005 Separación de DTOs Sí
-- ADR-006 GlobalExceptionHandler Sí
-- ADR-007 Implementación de Mappers No
-- ADR-008 Organización de rutas API No
-- ADR-009 Factory Method para entidades No
-- ADR-010 Externalización de secretos No
-
-# Evidencias
-
-Las evidencias visuales se almacenan en:
-
-- docs/img/evidencias/
-
-Ejemplos de evidencias:
-
-- Antes y después de controladores
-- Creación de servicios
-- Separación de DTOs
-- Manejo global de excepciones
-- Estructura refactorizada del proyecto
-
-Cambios implementados
-
-- Los cambios implementados en el sistema incluyen:
-
-1. Introducción de AuthService
-2. Introducción de ChurchService
-3. Introducción de PersonService
-4. Separación de DTOs
-5. Implementación de GlobalExceptionHandler
-
-Cada cambio se registra con un commit independiente, permitiendo evidenciar el proceso de refactorización.
+## 🗄️ Modelo Entidad-Relación
 
 ```
-Cómo ejecutar el proyecto
-1. Clonar el repositorio
+┌──────────┐        ┌──────────┐        ┌──────────┐
+│  Church  │──1:N──▶│  Person  │──1:N──▶│ Offering │
+└──────────┘        └────┬─────┘        └──────────┘
+     │                   │
+     │ 1:N               │ N:M (via Enrollment)
+     ▼                   ▼
+┌──────────┐        ┌────────────┐      ┌──────────┐
+│  Course  │◀──────▶│ Enrollment │─────▶│ Payment  │
+└──────────┘        └────────────┘      └──────────┘
+
+┌──────────┐
+│ AppUser  │  (Entidad independiente — gestiona autenticación)
+└──────────┘
+```
+
+> El diagrama MER completo se encuentra en [`docs/MER_erp_iglesias.md`](docs/mer.html)
+
+---
+
+## 📁 Estructura del Repositorio
+
+```
+erp_iglesias/
+├── 📄 README.md
+├── 🐳 docker-compose.yml
+│
+├── 📂 docs/
+│   ├── 📄 ADR_ERP_Iglesias.md          ← Documento ADR completo (10 decisiones)
+│   ├── 📄 MER_erp_iglesias.md          ← Diagrama Modelo Entidad-Relación
+│   │
+│   ├── 📂 cambios/                     ← Documentación de los 5 cambios implementados
+│   │   ├── CAMBIO-1_ADR-002_ChurchService.md
+│   │   ├── CAMBIO-2_ADR-005_DTOs.md
+│   │   ├── CAMBIO-3_ADR-001_ServiceLayer.md
+│   │   ├── CAMBIO-4_ADR-007_AngularServices.md
+│   │   └── CAMBIO-5_ADR-003_GlobalExceptionHandler.md
+│   │
+│   └── 📂 img/                         ← Evidencias visuales por ADR
+│       ├── ADR-001-img/
+│       ├── ADR-002-img/
+│       ├── ADR-003-img/
+│       ├── ADR-005-img/
+│       └── ADR-007-img/
+│
+├── 📂 backend/
+│   ├── src/main/java/com/iglesia/
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   │   ├── entity/
+│   │   ├── dto/
+│   │   │   ├── request/
+│   │   │   └── response/
+│   │   ├── exception/
+│   │   └── security/
+│   ├── Dockerfile
+│   └── pom.xml
+│
+└── 📂 frontend/
+    └── src/app/
+        ├── services/
+        ├── models/
+        └── components/
+```
+
+---
+
+## 📐 ADR — Architecture Decision Records
+
+Se propusieron **10 decisiones arquitectónicas**, de las cuales **5 fueron implementadas**.
+
+| ADR | Decisión | Patrón / Principio | Estado |
+|-----|----------|-------------------|--------|
+| [ADR-001](docs/cambios/CAMBIO-3_ADR-001_ServiceLayer.md) | Introducir Capa de Servicio | Service Layer + **SRP** | ✅ Implementado |
+| [ADR-002](docs/cambios/CAMBIO-1_ADR-002_ChurchService.md) | Eliminar `requireChurch()` duplicado | Singleton + **DRY** | ✅ Implementado |
+| [ADR-003](docs/cambios/CAMBIO-5_ADR-003_GlobalExceptionHandler.md) | Global Exception Handler | Facade + **OCP** | ✅ Implementado |
+| ADR-004 | Strategy Pattern en pagos | Strategy + **OCP** | 🟡 Propuesto |
+| [ADR-005](docs/cambios/CAMBIO-2_ADR-005_DTOs.md) | Separar DTOs de Controllers | DTO Pattern + **SRP** | ✅ Implementado |
+| ADR-006 | Reorganizar paquetes por capas | Layered Architecture + **DIP** | 🟡 Propuesto |
+| [ADR-007](docs/cambios/CAMBIO-4_ADR-007_AngularServices.md) | Servicios Angular por dominio | Service Layer + **SRP** | ✅ Implementado |
+| ADR-008 | Modelos TypeScript dedicados | DTO Pattern + **ISP** | 🟡 Propuesto |
+| ADR-009 | Interceptor HTTP global | Interceptor + **Facade** | 🟡 Propuesto |
+| ADR-010 | Estado centralizado con Signals | State Pattern | 🟡 Propuesto |
+
+>  Documento completo: [`docs/ADR_ERP_Iglesias.md`](docs/ADR_ERP_Iglesias.md)
+
+---
+
+## ✅ Cambios Implementados
+
+### [Cambio 1 — ADR-002: ChurchService Singleton](docs/cambios/CAMBIO-1_ADR-002_ChurchService.md)
+> Eliminación del método `requireChurch()` duplicado en 5 controladores. Se centralizó en un `ChurchService` gestionado como Singleton por Spring.
+
+### [Cambio 2 — ADR-005: DTOs Separados](docs/cambios/CAMBIO-2_ADR-005_DTOs.md)
+> Todos los records de transferencia de datos fueron movidos de las clases internas de los controladores a paquetes dedicados `dto/request/` y `dto/response/`.
+
+### [Cambio 3 — ADR-001: Capa de Servicio](docs/cambios/CAMBIO-3_ADR-001_ServiceLayer.md)
+> Se crearon 7 servicios (`EnrollmentService`, `OfferingService`, `PaymentService`, etc.) extrayendo la lógica de negocio de los controladores.
+
+### [Cambio 4 — ADR-007: Servicios Angular](docs/cambios/CAMBIO-4_ADR-007_AngularServices.md)
+> El `ApiService` monolítico del frontend fue dividido en 9 servicios especializados por dominio, con modelos TypeScript dedicados y URL centralizada en `environment.ts`.
+
+### [Cambio 5 — ADR-003: GlobalExceptionHandler](docs/cambios/CAMBIO-5_ADR-003_GlobalExceptionHandler.md)
+> Se implementó un manejador global de excepciones con `@RestControllerAdvice` que centraliza el manejo de errores y retorna respuestas JSON estandarizadas.
+
+---
+
+## Cómo Ejecutar el Proyecto
+
+### Prerrequisitos
+- Docker y Docker Compose instalados
+- Puerto `8080` disponible (backend)
+- Puerto `4200` disponible (frontend)
+
+### Pasos
+
+```bash
+# 1. Clonar el repositorio
 git clone <repository-url>
-2. Levantar los contenedores
-docker-compose up -d
-3. Ejecutar backend
-El backend se ejecuta en:
+cd erp_iglesias
 
-http://localhost:8080
+# 2. Levantar todos los servicios
+docker-compose up -d
+
+# 3. Verificar que los contenedores estén corriendo
+docker-compose ps
 ```
 
-# Conclusión
+### URLs de acceso
 
-- Este proyecto demuestra el proceso de auditoría y refactorización de un sistema existente, aplicando principios de arquitectura de software y buenas prácticas de ingeniería para mejorar la calidad del código.
+| Servicio | URL |
+|---------|-----|
+| Frontend Angular | http://localhost:4200 |
+| Backend API | http://localhost:8080/api |
+
+### Credenciales por defecto
+
+| Rol | Email | Contraseña |
+|-----|-------|-----------|
+| ADMIN | admin@parroquia.com | Admin123! |
 
 ---
+
+## 📊 Diagnóstico Arquitectónico — Hallazgos
+
+| # | Problema identificado | Archivos afectados | Principio violado |
+|---|----------------------|--------------------|------------------|
+| 1 | Lógica de negocio en controllers | `EnrollmentController`, `OfferingController` | SRP |
+| 2 | `requireChurch()` duplicado en 5 controllers | 5 archivos | DRY |
+| 3 | Sin manejo global de excepciones | Todos los controllers | OCP |
+| 4 | Referencia polimórfica sin FK (`referenceId`) | `Payment.java` | Integridad referencial |
+| 5 | DTOs como clases internas de controllers | 8 controllers | SRP |
+| 6 | Todas las clases en un solo paquete | 30+ archivos en `com.iglesia` | Layered Architecture |
+| 7 | `ApiService` monolítico en Angular | `api.service.ts` | SRP |
+| 8 | Sin tipado fuerte en el frontend | Todos los componentes | ISP |
+
+---
+
+*Parcial 1 — Arquitectura de Software · Marzo 2025*  
+*Juan Sebastián Osorio Fierro · Karina Cantillo Plaza*
