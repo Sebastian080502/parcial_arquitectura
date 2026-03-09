@@ -8,7 +8,6 @@ import com.iglesia.dto.response.CourseResponse;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
@@ -47,7 +46,7 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
-    public CourseResponse findById(Long id) {
+    public CourseResponse getById(Long id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new com.iglesia.exception.CourseNotFoundException(id));
         return CourseResponse.from(course);

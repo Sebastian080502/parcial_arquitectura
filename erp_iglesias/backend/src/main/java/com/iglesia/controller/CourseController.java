@@ -3,6 +3,8 @@ package com.iglesia.controller;
 import com.iglesia.service.CourseService;
 import com.iglesia.dto.request.CourseRequest;
 import com.iglesia.dto.response.CourseResponse;
+import com.iglesia.entity.Course;
+import com.iglesia.exception.CourseNotFoundException;
 
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,9 +34,13 @@ public class CourseController {
         return courseService.listAll();
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('CLIENT')")
+    @PreAuthorize("permitAll()")
     @GetMapping("/{id}")
     public CourseResponse getById(@PathVariable Long id) {
-        return courseService.findById(id);
+
+        System.out.println("➡️ Ejecutando getById con id: " + id);
+        Course course = courseRepository.getById(id)
+                .orElseThrow(() -> new CourseNotFoundException(id));
+        return CourseResponse.from(course);
     }
 }

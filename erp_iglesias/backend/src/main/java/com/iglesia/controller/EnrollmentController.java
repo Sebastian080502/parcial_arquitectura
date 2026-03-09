@@ -3,7 +3,6 @@ package com.iglesia.controller;
 import com.iglesia.service.EnrollmentService;
 import com.iglesia.dto.request.EnrollmentRequest;
 import com.iglesia.dto.response.EnrollmentResponse;
-
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

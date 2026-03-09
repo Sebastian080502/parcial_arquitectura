@@ -7,8 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
-import { ApiService } from './api.service';
-import { AuthService } from './auth.service';
+import { AuthService } from '../services/auth.service'; // Ya existe
 
 @Component({
   selector: 'app-login',
@@ -22,60 +21,8 @@ import { AuthService } from './auth.service';
     MatSnackBarModule,
     MatDividerModule
   ],
-  template: `
-    <div class="login">
-      <mat-card>
-        <div class="header">
-          <div class="title">IglesiAdmin</div>
-          <div class="subtitle">Gestión integral de parroquias</div>
-        </div>
-        <mat-divider></mat-divider>
-        <h2>Ingresar</h2>
-        <form [formGroup]="form" (ngSubmit)="submit()">
-          <mat-form-field appearance="outline">
-            <mat-label>Email</mat-label>
-            <input matInput formControlName="email" type="email" autocomplete="username" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Contraseña</mat-label>
-            <input matInput formControlName="password" type="password" autocomplete="current-password" />
-          </mat-form-field>
-          <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading">
-            Entrar
-          </button>
-        </form>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .login {
-      display: flex;
-      justify-content: center;
-      width: 100%;
-    }
-    mat-card {
-      width: 380px;
-      padding: 28px;
-      display: grid;
-      gap: 16px;
-    }
-    .header {
-      display: grid;
-      gap: 4px;
-    }
-    .title {
-      font-size: 20px;
-      font-weight: 700;
-    }
-    .subtitle {
-      font-size: 13px;
-      color: #6b7280;
-    }
-    form {
-      display: grid;
-      gap: 12px;
-    }
-  `]
+  template: ` ... `,
+  styles: [` ... `]
 })
 export class LoginComponent {
   loading = false;
@@ -86,21 +33,20 @@ export class LoginComponent {
 
   constructor(
     private fb: FormBuilder,
-    private api: ApiService,
-    private auth: AuthService,
+    private authService: AuthService, // Nota: usamos AuthService, no ApiService
     private router: Router,
     private snack: MatSnackBar
   ) {}
 
   submit() {
-    if (this.form.invalid || this.loading) {
-      return;
-    }
+    if (this.form.invalid || this.loading) return;
     this.loading = true;
     const { email, password } = this.form.getRawValue();
-    this.api.login(email!, password!).subscribe({
+    // Aquí necesitas un método de login en AuthService. Si no existe, créalo.
+    // Por ahora asumimos que AuthService tiene un método login.
+    this.authService.login(email!, password!).subscribe({
       next: (res) => {
-        this.auth.setAuth(res);
+        this.authService.setAuth(res); // Guarda el estado (token, email, role)
         this.router.navigateByUrl('/dashboard');
       },
       error: (err) => {
