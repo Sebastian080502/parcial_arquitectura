@@ -7,6 +7,8 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.iglesia.entity.AppUser;
+
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Instant;

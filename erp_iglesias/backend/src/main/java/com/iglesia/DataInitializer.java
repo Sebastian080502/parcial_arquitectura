@@ -4,6 +4,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.iglesia.entity.AppUser;
+import com.iglesia.repository.AppUserRepository;
+
 @Component
 public class DataInitializer implements CommandLineRunner {
     private final AppUserRepository appUserRepository;

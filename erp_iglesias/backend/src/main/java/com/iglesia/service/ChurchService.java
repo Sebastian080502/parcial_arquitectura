@@ -1,8 +1,9 @@
 package com.iglesia.service;
 
-import com.iglesia.Church;
-import com.iglesia.ChurchRepository;
+import com.iglesia.entity.Church;
 import com.iglesia.exception.ChurchNotFoundException;
+import com.iglesia.repository.ChurchRepository;
+
 import org.springframework.stereotype.Service;
 
 @Service
