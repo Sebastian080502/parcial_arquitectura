@@ -1,12 +1,8 @@
 package com.iglesia.controller;
 
+import com.iglesia.service.PersonService;
 import com.iglesia.dto.request.PersonRequest;
 import com.iglesia.dto.response.PersonResponse;
-
-import com.iglesia.service.ChurchService;
-import com.iglesia.entity.Church;
-import com.iglesia.entity.Person;
-import com.iglesia.repository.PersonRepository;
 
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,40 +13,28 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/people")
 public class PersonController {
-    private final PersonRepository personRepository;
-    private final ChurchService churchService;
 
-    public PersonController(PersonRepository personRepository, ChurchService churchService) {
-        this.personRepository = personRepository;
-        this.churchService = churchService;
+    private final PersonService personService;
+
+    public PersonController(PersonService personService) {
+        this.personService = personService;
     }
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('CLIENT')")
     @PostMapping
     public PersonResponse create(@Valid @RequestBody PersonRequest request) {
-        Church church = churchService.getRequiredChurch();
-
-        Person person = new Person();
-        person.setFirstName(request.firstName());
-        person.setLastName(request.lastName());
-        person.setDocument(request.document());
-        person.setPhone(request.phone());
-        person.setEmail(request.email());
-        person.setChurch(church);
-
-        personRepository.save(person);
-        return PersonResponse.from(person);
+        return personService.create(request);
     }
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('CLIENT')")
     @GetMapping
     public List<PersonResponse> list() {
-        Church church = churchService.getRequiredChurch();
-
-        return personRepository.findAllByChurchId(church.getId())
-                .stream()
-                .map(PersonResponse::from)
-                .toList();
+        return personService.listAll();
     }
 
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CLIENT')")
+    @GetMapping("/{id}")
+    public PersonResponse getById(@PathVariable Long id) {
+        return personService.findById(id);
+    }
 }
