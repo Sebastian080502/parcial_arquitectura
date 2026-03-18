@@ -39,8 +39,6 @@ public class CourseController {
     public CourseResponse getById(@PathVariable Long id) {
 
         System.out.println("➡️ Ejecutando getById con id: " + id);
-        Course course = courseRepository.getById(id)
-                .orElseThrow(() -> new CourseNotFoundException(id));
-        return CourseResponse.from(course);
+        return courseService.getById(id);
     }
 }
