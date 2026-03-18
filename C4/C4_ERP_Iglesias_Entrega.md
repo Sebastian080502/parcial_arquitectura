@@ -54,7 +54,7 @@ El Diagrama de Contexto representa el sistema ERP Iglesias como una **caja negra
 
 >`C1_Contexto.png`
 
-![Diagrama de Contexto — ERP Iglesias](./img/C1_Contexto.png)
+![Diagrama de Contexto — ERP Iglesias](IMG/C1_Contexto.png)
 
 ---
 
@@ -102,7 +102,7 @@ El Diagrama de Contenedores amplía el sistema ERP Iglesias y muestra las **piez
 
 >  `C2_Contenedores.png`
 
-![Diagrama de Contenedores — ERP Iglesias](./img/C2_Contenedores.png)
+![Diagrama de Contenedores — ERP Iglesias](IMG/C2_Contenedores.png)
 
 ---
 
@@ -160,7 +160,7 @@ El Diagrama de Componentes profundiza en el interior del contenedor **API REST (
 
 > `C3_Componentes.png`
 
-![Diagrama de Componentes — ERP Iglesias](./img/C3_Componentes.png)
+![Diagrama de Componentes — ERP Iglesias](IMG/C3_Componentes.png)
 
 ---
 
