@@ -150,17 +150,17 @@ Este diagrama representa el **Nivel 2 (Contenedores)** del modelo C4. Muestra la
 
 ---
 
-## Nivel 3 — Diagrama de Componentes
+# Nivel 3 — Diagrama de Componentes (Sistema Original)
 
 ### ¿Qué muestra este diagrama?
 
-El Diagrama de Componentes profundiza en el interior del contenedor **API REST (Spring Boot)** — el más relevante arquitectónicamente — mostrando los componentes internos que lo conforman, sus responsabilidades y las relaciones entre ellos. Responde a la pregunta: *¿qué hay dentro del backend?*
+El Diagrama de Componentes profundiza en el interior del contenedor **Backend API (Spring Boot)**, mostrando la estructura interna del sistema en su estado **original**, antes de aplicar las mejoras arquitectónicas documentadas en los ADRs. Responde a la pregunta: *¿qué hay dentro del backend en su versión inicial?*
 
 ### Diagrama
 
 > `C3_Componentes.png`
 
-![Diagrama de Componentes — ERP Iglesias](IMG/C3_Componentes.png)
+![Diagrama de Componentes — ERP Iglesias](./img/C3_Componentes.png)
 
 ---
 
@@ -168,55 +168,50 @@ El Diagrama de Componentes profundiza en el interior del contenedor **API REST (
 
 #### Componentes identificados
 
-Se identificaron siete componentes arquitectónicos, todos evidenciados en el código fuente y mejorados mediante los ADRs implementados:
+Se identificaron cuatro componentes en el sistema original:
 
-**Seguridad JWT** (`JwtAuthFilter`, `JwtService`, `SecurityConfig`) es el componente transversal que intercepta **todas** las peticiones HTTP antes de que lleguen a los controladores. Valida el token JWT, extrae el rol del usuario y establece la autenticación en el contexto de Spring Security.
+**Seguridad JWT** (`JwtAuthFilter`, `JwtService`, `SecurityConfig`) es el componente transversal que intercepta todas las peticiones HTTP antes de que lleguen a los controladores. Valida el token JWT, extrae el rol del usuario y establece la autenticación en el contexto de Spring Security, habilitando la autorización con `@PreAuthorize`.
 
-**Controladores REST** (`AuthController`, `ChurchController`, `CourseController`, `EnrollmentController`, `OfferingController`, `PaymentController`, `PersonController`) reciben las peticiones HTTP, validan los datos de entrada con `@Valid` y delegan la ejecución en los servicios. No contienen lógica de negocio — implementado mediante **ADR-001** (Service Layer + SRP).
+**Controladores REST** (`AuthController`, `ChurchController`, `CourseController`, `EnrollmentController`, `OfferingController`, `PaymentController`, `PersonController`) son el componente central del sistema original. A diferencia de una arquitectura en capas bien definida, en esta versión los controladores concentran **múltiples responsabilidades**: reciben las peticiones HTTP, contienen la lógica de negocio, validan reglas de dominio, acceden directamente a los repositorios y construyen las respuestas. Esto genera un alto acoplamiento y dificulta el mantenimiento y las pruebas unitarias.
 
-**Manejador global de excepciones** (`GlobalExceptionHandler`, `ErrorResponse`) captura todas las excepciones de dominio y las transforma en respuestas JSON estandarizadas. Implementado mediante **ADR-003** (@ControllerAdvice + OCP).
+**Repositorios JPA** (`ChurchRepository`, `CourseRepository`, `EnrollmentRepository`, `OfferingRepository`, `PaymentRepository`, `PersonRepository`, `AppUserRepository`) son la capa de abstracción sobre la base de datos mediante Spring Data JPA. En el sistema original, son accedidos **directamente** desde los controladores, sin pasar por una capa de servicios intermedia.
 
-**Servicios de negocio** (`ChurchService`, `EnrollmentService`, `OfferingService`, `PaymentService`, `UserService`, `AuthService`) encapsulan la lógica de negocio con `@Service` y `@Transactional`. `ChurchService` centraliza la obtención de la iglesia — **ADR-002** (Singleton + DRY). Los demás servicios fueron extraídos de los controladores mediante **ADR-001**.
-
-**DTOs** (`dto/request/`, `dto/response/`) definen la estructura de los datos intercambiados con el frontend. Movidos a paquetes independientes mediante **ADR-005** (DTO Pattern + SRP).
-
-**Repositorios JPA** (`ChurchRepository`, `CourseRepository`, `EnrollmentRepository`, `OfferingRepository`, `PaymentRepository`, `PersonRepository`, `AppUserRepository`) son la capa de abstracción sobre la base de datos mediante Spring Data JPA.
-
-**Entidades JPA** (`Church`, `Course`, `Enrollment`, `Offering`, `Payment`, `Person`, `AppUser`) modelan las tablas de la base de datos y sus relaciones mediante anotaciones Hibernate.
+**Entidades JPA** (`Church`, `Course`, `Enrollment`, `Offering`, `Payment`, `Person`, `AppUser`) modelan las tablas de la base de datos y sus relaciones mediante anotaciones Hibernate. Son construidas y manipuladas directamente por los repositorios.
 
 #### ¿Por qué elegimos estos elementos?
 
-Se eligieron estos componentes porque representan **unidades con responsabilidad clara** dentro del backend, no archivos aislados. Se eligió el **backend como contenedor a profundizar** porque es donde se concentra la mayor complejidad arquitectónica y donde se aplicaron los 5 cambios de los ADRs implementados.
+Se eligieron estos componentes porque representan las **unidades funcionales reales** del backend original. Se omitieron servicios, DTOs independientes y manejador de excepciones porque **no existían** en el sistema original — estos fueron introducidos posteriormente mediante los ADRs implementados.
+
+Se eligió el **backend como contenedor a profundizar** porque es donde se concentra la mayor complejidad arquitectónica del sistema y donde se identificaron los principales problemas de diseño.
 
 #### ¿Cómo se relacionan entre sí?
 
-El flujo de una petición típica dentro del backend es:
+El flujo de una petición en el sistema original es:
 
-1. El **Frontend Web** envía una petición con token JWT
-2. **Seguridad JWT** intercepta, valida el token y autoriza el acceso
-3. Los **Controladores REST** reciben la petición, validan con **DTOs** y delegan en **Servicios**
-4. Si hay error, el **Manejador global** lo captura y retorna `ErrorResponse`
-5. Los **Servicios** aplican lógica, convierten entidades en **DTOs** y usan **Repositorios**
-6. Los **Repositorios** operan sobre **Entidades JPA** y ejecutan SQL en **PostgreSQL**
+1. El **Frontend Web** envía una petición con token JWT al backend
+2. **Seguridad JWT** intercepta la petición, valida el token y autoriza el acceso
+3. Los **Controladores REST** reciben la petición, aplican la lógica de negocio internamente y acceden **directamente** a los **Repositorios JPA**
+4. Los **Repositorios JPA** construyen y manipulan **Entidades JPA**
+5. Las **Entidades JPA** ejecutan operaciones SQL sobre la **Base de datos PostgreSQL**
 
-Las dependencias fluyen en **una sola dirección**: `Controllers → Services → Repositories`, sin dependencias inversas.
+A diferencia de una arquitectura bien estructurada, las dependencias no fluyen en una dirección única — los controladores conocen tanto la lógica de negocio como la capa de datos, generando alto acoplamiento.
 
 #### ¿Qué nivel C4 representa?
 
-Este diagrama representa el **Nivel 3 (Componentes)** del modelo C4. Muestra la estructura interna de un contenedor específico con el nivel de detalle suficiente para entender cómo está organizado el código.
+Este diagrama representa el **Nivel 3 (Componentes)** del modelo C4. Muestra la estructura interna del contenedor Backend en su estado original, evidenciando los problemas arquitectónicos que motivaron las mejoras documentadas en los ADRs.
 
 #### Decisiones y supuestos tomados
 
-- Se decidió **agrupar los controladores en un solo componente** para mantener el diagrama legible. Lo mismo aplica para servicios y repositorios.
-- Se incluyeron los **DTOs como componente** porque representan una decisión arquitectónica explícita documentada en **ADR-005**.
-- Se incluyó la **Seguridad JWT como componente transversal** porque intercepta el flujo antes de los controladores.
-- Se asumió que las **Entidades JPA** merecen representación propia porque modelan el dominio y son el puente entre la lógica de negocio y la base de datos.
-
----
+- Se decidió **no incluir servicios** porque en el sistema original no existía una capa de servicios — la lógica de negocio vivía directamente en los controladores, como se evidencia en los archivos `EnrollmentController.java`, `OfferingController.java` y `PaymentController.java` del repositorio original.
+- Se decidió **no incluir DTOs independientes** porque en el sistema original los records de transferencia de datos estaban definidos como clases internas de los controladores.
+- Se decidió **no incluir GlobalExceptionHandler** porque no existía en el sistema original — cada controlador manejaba sus errores de forma individual con `ResponseStatusException`.
+- Se identificó como **problema arquitectónico principal** que los controladores violaban el Principio de Responsabilidad Única (SRP) al concentrar múltiples responsabilidades, lo cual motivó las mejoras implementadas en los ADRs.
 
 ## Conclusión
 
-La arquitectura de ERP Iglesias sigue un patrón de **tres capas** (presentación, lógica, datos) con separación clara de responsabilidades en cada nivel del modelo C4.
+La arquitectura de ERP Iglesias sigue un patrón de **tres capas** 
+(presentación, lógica, datos), analizado a través de los tres 
+niveles del modelo C4.
 
 Los tres niveles mantienen coherencia entre sí:
 
@@ -224,11 +219,25 @@ Los tres niveles mantienen coherencia entre sí:
 |----------|---------|-----------------|
 | Contexto (N1) | ERP Iglesias | ↓ |
 | Contenedores (N2) | Frontend + API REST + PostgreSQL | ↓ |
-| Componentes (N3) | Controllers + Services + Repositories + Security + DTOs + Entities + ExceptionHandler | — |
+| Componentes (N3) | Controllers + Repositories + Security + Entities | — |
 
-Las decisiones arquitectónicas documentadas en los ADRs implementados — **Service Layer (ADR-001)**, **ChurchService Singleton (ADR-002)**, **GlobalExceptionHandler (ADR-003)**, **DTOs separados (ADR-005)** y **Angular Services (ADR-007)** — mejoran directamente la mantenibilidad, escalabilidad y testeabilidad del sistema, aplicando principios **SOLID** y patrones de diseño reconocidos en la industria.
+El análisis del sistema original evidenció los siguientes 
+problemas arquitectónicos:
 
-El sistema resultante tiene componentes con responsabilidades claras, dependencias unidireccionales y un flujo de datos predecible, lo que facilita tanto su comprensión como su evolución futura.
+- Los **Controladores REST** concentraban múltiples 
+responsabilidades, violando el Principio de Responsabilidad 
+Única (SRP)
+- No existía una **capa de servicios** — la lógica de negocio 
+vivía directamente en los controllers
+- Los **DTOs** estaban acoplados como clases internas de los 
+controllers
+- No había un **manejador global de excepciones** — cada 
+controller manejaba errores de forma inconsistente
+
+Estos hallazgos motivaron las mejoras arquitectónicas 
+documentadas en los ADRs del proyecto, aplicando principios 
+**SOLID** y patrones de diseño reconocidos en la industria, 
+logrando un sistema más mantenible, escalable y testeable.
 
 ---
 
